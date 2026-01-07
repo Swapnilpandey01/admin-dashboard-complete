@@ -1,6 +1,6 @@
 import { User } from "@/types/user";
 
-let users: User[] = Array.from({ length: 50 }).map((_, i) => ({
+let users: User[] = Array.from({ length: 30 }).map((_, i) => ({
   id: String(i + 1),
   name: `User ${i + 1}`,
   email: `user${i + 1}@gmail.com`,
