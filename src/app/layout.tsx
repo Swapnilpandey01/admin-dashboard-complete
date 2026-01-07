@@ -1,14 +1,21 @@
 
+import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { UserProvider } from "@/context/UserContext";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html>
+    <html lang="en">
       <body>
         <AuthProvider>
           <UserProvider>
-            {children}
+            <div className="app-shell">
+              <main className="app-main">{children}</main>
+            </div>
           </UserProvider>
         </AuthProvider>
       </body>
