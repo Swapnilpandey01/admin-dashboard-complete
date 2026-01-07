@@ -10,7 +10,7 @@ export default function NavBar() {
       <Link href="/dashboard">Dashboard</Link> |{" "}
       <Link href="/dashboard/users">Users</Link>
 
-      <span style={{ marginLeft: 950 }}>
+      <span style={{ marginLeft: 940 }}>
         Role: <strong>{role}</strong>
       </span>
 

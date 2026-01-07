@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (storedRole) {
       setRoleState(storedRole);
     }
-    setLoading(false); // 🔑 important
+    setLoading(false); // important
   }, []);
 
   const login = (r: Role) => {

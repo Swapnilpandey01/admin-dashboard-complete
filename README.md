@@ -1,23 +1,27 @@
 
-# Admin Dashboard – Role-Based User Management
+## Admin Dashboard – Role-Based User Management
 
-## Tech Stack
-- Next.js (App Router)
-- React
-- TypeScript
-- Context API
+### Tech Stack
+- **Next.js (App Router)**
+- **React**
+- **TypeScript**
+- **Context API** for auth and users
 
-## Roles
-- Admin: Full access
-- Viewer: Read-only
+### What This App Does
+- Simple login where you choose a role: **Admin** or **Viewer**.
+- Shows a **dashboard** page with basic user stats (total, active, inactive).
+- Shows a **users** page with a table of users:
+  - Search by name or email.
+  - Filter by role and status.
+  - Paginate through the list.
+- Data comes from a small **mock API** in memory (no real backend).
 
-## Features
-- Mock authentication
-- Role-based protected routes
-- User management (search, filter, pagination)
-- Dashboard analytics
-- Typed mock API
+### Roles
+- **Admin**: Can change user roles and toggle user status.
+- **Viewer**: Can only view data (no editing).
 
-## Run Locally
+### How to Run
+```bash
 npm install
 npm run dev
+```

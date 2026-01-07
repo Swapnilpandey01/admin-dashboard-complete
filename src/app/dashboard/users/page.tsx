@@ -18,31 +18,92 @@ export default function UsersPage() {
   const { role, loading } = useAuth();
   const { users, saveUser } = useUsers();
   const router = useRouter();
-  const [currentPage, setCurrentPage] = useState(1);
 
-  const totalPages = Math.ceil(users.length / PAGE_SIZE);
-  const startIndex = (currentPage - 1) * PAGE_SIZE;
-  const currentUsers = users.slice(startIndex, startIndex + PAGE_SIZE);
+  // SEARCH & FILTER STATE (CORRECT PLACE)
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Protect route
   useEffect(() => {
-    if (loading || !role) {
+    if (!loading && !role) {
       router.replace("/login");
     }
   }, [loading, role, router]);
 
   if (loading || !role) return null;
 
+  // SEARCH
+  const searchedUsers = users.filter(
+    (user: { name: string; email: string; }) =>
+      user.name.toLowerCase().includes(search.toLowerCase()) ||
+      user.email.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // ROLE FILTER
+  const roleFilteredUsers =
+    roleFilter === "all"
+      ? searchedUsers
+      : searchedUsers.filter((u: { role: string; }) => u.role === roleFilter);
+
+  // STATUS FILTER
+  const filteredUsers =
+    statusFilter === "all"
+      ? roleFilteredUsers
+      : roleFilteredUsers.filter((u: { status: string; }) => u.status === statusFilter);
+
+  // PAGINATION (AFTER FILTERING)
+  const totalPages = Math.ceil(filteredUsers.length / PAGE_SIZE);
+  const startIndex = (currentPage - 1) * PAGE_SIZE;
+  const currentUsers = filteredUsers.slice(
+    startIndex,
+    startIndex + PAGE_SIZE
+  );
+
   return (
     <div style={{ padding: 40 }}>
       <h1>User Management</h1>
 
-      <table
-        border={1}
-        cellPadding={8}
-        cellSpacing={0}
-        style={{ marginTop: 20 }}
-      >
+      {/* SEARCH & FILTER UI */}
+      <div style={{ marginBottom: 20, display: "flex", gap: 12 }}>
+        <input
+          type="text"
+          placeholder="Search by name or email"
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setCurrentPage(1);
+          }}
+        />
+
+        <select
+          value={roleFilter}
+          onChange={(e) => {
+            setRoleFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+        >
+          <option value="all">All Roles</option>
+          <option value="admin">Admin</option>
+          <option value="viewer">Viewer</option>
+        </select>
+
+        <select
+          value={statusFilter}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+        >
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      {/* TABLE */}
+      <table border={1} cellPadding={8} style={{ marginTop: 20 }}>
         <thead>
           <tr>
             <th>Name</th>
@@ -58,7 +119,6 @@ export default function UsersPage() {
               <td>{user.name}</td>
               <td>{user.email}</td>
 
-              {/* ROLE */}
               <td>
                 {role === "admin" ? (
                   <select
@@ -78,7 +138,6 @@ export default function UsersPage() {
                 )}
               </td>
 
-              {/* STATUS */}
               <td>
                 {role === "admin" ? (
                   <button
@@ -103,8 +162,7 @@ export default function UsersPage() {
         </tbody>
       </table>
 
-       {/* PAGINATION CONTROLS  */}
-
+      {/* PAGINATION */}
       <div style={{ marginTop: 20 }}>
         <button
           disabled={currentPage === 1}
