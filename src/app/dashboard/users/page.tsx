@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useUsers } from "@/context/UserContext";
@@ -12,19 +12,26 @@ interface User {
   status: string;
 }
 
+const PAGE_SIZE = 10;
+
 export default function UsersPage() {
-  const { role } = useAuth();
+  const { role, loading } = useAuth();
   const { users, saveUser } = useUsers();
   const router = useRouter();
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // 🔒 Protect route
+  const totalPages = Math.ceil(users.length / PAGE_SIZE);
+  const startIndex = (currentPage - 1) * PAGE_SIZE;
+  const currentUsers = users.slice(startIndex, startIndex + PAGE_SIZE);
+
+  // Protect route
   useEffect(() => {
-    if (!role) {
-      router.push("/login");
+    if (loading || !role) {
+      router.replace("/login");
     }
-  }, [role, router]);
+  }, [loading, role, router]);
 
-  if (!role) return null;
+  if (loading || !role) return null;
 
   return (
     <div style={{ padding: 40 }}>
@@ -46,7 +53,7 @@ export default function UsersPage() {
         </thead>
 
         <tbody>
-          {users.map((user: User) => (
+          {currentUsers.map((user: User) => (
             <tr key={user.id}>
               <td>{user.name}</td>
               <td>{user.email}</td>
@@ -95,6 +102,28 @@ export default function UsersPage() {
           ))}
         </tbody>
       </table>
+
+       {/* PAGINATION CONTROLS  */}
+
+      <div style={{ marginTop: 20 }}>
+        <button
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage((p) => p - 1)}
+        >
+          Previous
+        </button>
+
+        <span style={{ margin: "0 12px" }}>
+          Page {currentPage} of {totalPages}
+        </span>
+
+        <button
+          disabled={currentPage === totalPages}
+          onClick={() => setCurrentPage((p) => p + 1)}
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 }

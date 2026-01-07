@@ -10,12 +10,12 @@ export default function NavBar() {
       <Link href="/dashboard">Dashboard</Link> |{" "}
       <Link href="/dashboard/users">Users</Link>
 
-      <span style={{ marginLeft: 20 }}>
+      <span style={{ marginLeft: 950 }}>
         Role: <strong>{role}</strong>
       </span>
 
       <button
-        style={{ marginLeft: 20 }}
+        style={{ marginLeft: 10 }}
         onClick={logout}
       >
         Logout

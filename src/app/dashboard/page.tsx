@@ -5,15 +5,15 @@ import { useAuth } from "@/context/AuthContext";
 import { useUsers } from "@/context/UserContext";
 
 export default function Dashboard() {
-  const { role } = useAuth();
+  const { role, loading } = useAuth();
   const router = useRouter();
   const { users } = useUsers();
 
   useEffect(() => {
-    if (!role) router.push("/login");
-  }, [role]);
+    if (loading || !role) router.replace("/login");
+  }, [loading, role]);
 
-  if (!role) return null;
+  if (loading || !role) return null;
 
   const active = users.filter((u: { status: string; }) => u.status === "active").length;
 

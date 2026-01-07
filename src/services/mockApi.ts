@@ -1,9 +1,9 @@
 import { User } from "@/types/user";
 
-let users: User[] = Array.from({ length: 10 }).map((_, i) => ({
+let users: User[] = Array.from({ length: 50 }).map((_, i) => ({
   id: String(i + 1),
   name: `User ${i + 1}`,
-  email: `user${i + 1}@mail.com`,
+  email: `user${i + 1}@gmail.com`,
   role: i % 4 === 0 ? "admin" : "viewer",
   status: i % 3 === 0 ? "inactive" : "active"
 }));
