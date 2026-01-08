@@ -13,8 +13,15 @@ export default function DashboardPage() {
   const viewerUsers = users.filter((u: { role: string; }) => u.role === "viewer").length;
 
   const activePercentage =
-    totalUsers > 0 ? Math.round((activeUsers / totalUsers) * 100) : 0;
-  const inactivePercentage = 100 - activePercentage;
+    totalUsers === 0
+      ? 0
+      : Math.round((activeUsers / totalUsers) * 100);
+
+  const inactivePercentage =
+    totalUsers === 0
+      ? 0
+      : 100 - activePercentage;
+
 
   return (
     <div style={{ padding: 40 }}>

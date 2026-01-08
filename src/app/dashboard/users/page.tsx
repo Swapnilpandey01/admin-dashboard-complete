@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useUsers } from "@/context/UserContext";
+import DataTable, { Column } from "@/components/DataTable";
+
 
 interface User {
   id: string | number;
@@ -61,6 +63,73 @@ export default function UsersPage() {
     startIndex + PAGE_SIZE
   );
 
+  const columns: Column<User>[] = [
+    {
+      header: "Name",
+      accessor: "name",
+    },
+    {
+      header: "Email",
+      accessor: "email",
+    },
+    {
+      header: "Role",
+      accessor: "role",
+      render: (user) =>
+        role === "admin" ? (
+          <select
+            className="select-input"
+            value={user.role}
+            onChange={(e) =>
+              saveUser({
+                ...user,
+                role: e.target.value as "admin" | "viewer",
+              })
+            }
+          >
+            <option value="admin">Admin</option>
+            <option value="viewer">Viewer</option>
+          </select>
+        ) : (
+          <span className={`tag-pill ${user.role}`}>
+            {user.role}
+          </span>
+        ),
+    },
+    {
+      header: "Status",
+      accessor: "status",
+      render: (user) =>
+        role === "admin" ? (
+          <button
+            className={`status-toggle-btn ${user.status === "active"
+              ? "status-toggle-btn-active"
+              : "status-toggle-btn-inactive"
+              }`}
+            onClick={() =>
+              saveUser({
+                ...user,
+                status: user.status === "active" ? "inactive" : "active",
+              })
+            }
+          >
+            {user.status}
+          </button>
+        ) : (
+          <span
+            className={`tag-pill ${user.status === "active"
+              ? "status-active"
+              : "status-inactive"
+              }`}
+          >
+            {user.status}
+          </span>
+
+        ),
+    },
+  ];
+
+
   return (
     <section>
       <h1 className="page-heading">Users</h1>
@@ -69,6 +138,8 @@ export default function UsersPage() {
       </p>
 
       <div className="card-surface">
+
+
         {/* SEARCH & FILTER UI */}
         <div className="filters-row">
           <div>
@@ -128,85 +199,12 @@ export default function UsersPage() {
         </div>
 
         {/* TABLE */}
-        <div className="data-table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Status</th>
-              </tr>
-            </thead>
+        <DataTable<User>
+          columns={columns}
+          data={currentUsers}
+          emptyMessage="No users found"
+        />
 
-            <tbody>
-              {currentUsers.map((user: User) => (
-                <tr key={user.id}>
-                  <td>{user.name}</td>
-                  <td>{user.email}</td>
-
-                  <td>
-                    {role === "admin" ? (
-                      <select
-                        className="select-input"
-                        style={{ minWidth: 120, paddingTop: 6, paddingBottom: 6 }}
-                        value={user.role}
-                        onChange={(e) =>
-                          saveUser({
-                            ...user,
-                            role: e.target.value as "admin" | "viewer",
-                          })
-                        }
-                      >
-                        <option value="admin">Admin</option>
-                        <option value="viewer">Viewer</option>
-                      </select>
-                    ) : (
-                      <span
-                        className={`tag-pill ${
-                          user.role === "admin" ? "admin" : "viewer"
-                        }`}
-                      >
-                        {user.role}
-                      </span>
-                    )}
-                  </td>
-
-                  <td>
-                    {role === "admin" ? (
-                      <button
-                        className={`status-toggle-btn ${
-                          user.status === "active"
-                            ? "status-toggle-btn-active"
-                            : "status-toggle-btn-inactive"
-                        }`}
-                        onClick={() =>
-                          saveUser({
-                            ...user,
-                            status:
-                              user.status === "active"
-                                ? "inactive"
-                                : "active",
-                          })
-                        }
-                      >
-                        {user.status}
-                      </button>
-                    ) : (
-                      <span
-                        className={`tag-pill ${
-                          user.status === "active" ? "admin" : "viewer"
-                        }`}
-                      >
-                        {user.status}
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
 
         {/* PAGINATION */}
         <div className="pagination">

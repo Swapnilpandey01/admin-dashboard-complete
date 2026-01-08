@@ -475,4 +475,14 @@ button {
     padding: 24px 18px 18px 18px;
   }
 }
+/* STATUS PILL STYLES */
+.tag-pill.status-active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.tag-pill.status-inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
 

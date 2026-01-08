@@ -9,7 +9,7 @@
 
 ### What This App Does
 - Simple login where you choose a role: **Admin** or **Viewer**.
-- Shows a **dashboard** page with basic user stats (total, active, inactive).
+- Shows a **dashboard** page with basic user stats (total, active, inactive, role distribution, user activity).
 - Shows a **users** page with a table of users:
   - Search by name or email.
   - Filter by role and status.
