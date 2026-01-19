@@ -1,9 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useUsers } from "@/context/UserContext";
 import DataTable, { Column } from "@/components/DataTable";
+
 
 
 interface User {
@@ -21,11 +22,29 @@ export default function UsersPage() {
   const { users, saveUser } = useUsers();
   const router = useRouter();
 
-  // SEARCH & FILTER STATE (CORRECT PLACE)
-  const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
+  // SEARCH & FILTER STATE FROM URL
+  const searchParams = useSearchParams();
+  const search = searchParams.get("search") ?? "";
+  const roleFilter = searchParams.get("role") ?? "all";
+  const statusFilter = searchParams.get("status") ?? "all";
+  const currentPage = Number(searchParams.get("page") ?? 1);
+
+  // FUNCTION TO UPDATE QUERY PARAMS IN URL
+  const updateQuery = (updates: Record<string, string | number>) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    Object.entries(updates).forEach(([key, value]) => {
+      if (!value || value === "all") {
+        params.delete(key);
+      } else {
+        params.set(key, String(value));
+      }
+    });
+
+    router.replace(`?${params.toString()}`);
+  };
+
+
 
   // Protect route
   useEffect(() => {
@@ -152,10 +171,10 @@ export default function UsersPage() {
               type="text"
               placeholder="Search by name or email"
               value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setCurrentPage(1);
-              }}
+              onChange={(e) =>
+                updateQuery({ search: e.target.value, page: 1 })
+              }
+
             />
           </div>
 
@@ -167,10 +186,10 @@ export default function UsersPage() {
               id="roleFilter"
               className="select-input"
               value={roleFilter}
-              onChange={(e) => {
-                setRoleFilter(e.target.value);
-                setCurrentPage(1);
-              }}
+              onChange={(e) =>
+                updateQuery({ role: e.target.value, page: 1 })
+              }
+
             >
               <option value="all">All roles</option>
               <option value="admin">Admin</option>
@@ -186,10 +205,10 @@ export default function UsersPage() {
               id="statusFilter"
               className="select-input"
               value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setCurrentPage(1);
-              }}
+              onChange={(e) =>
+                updateQuery({ status: e.target.value, page: 1 })
+              }
+
             >
               <option value="all">All status</option>
               <option value="active">Active</option>
@@ -211,7 +230,8 @@ export default function UsersPage() {
           <button
             className="pagination-btn"
             disabled={currentPage === 1}
-            onClick={() => setCurrentPage((p) => p - 1)}
+            onClick={() => updateQuery({ page: currentPage - 1 })}
+
           >
             Previous
           </button>
@@ -223,7 +243,8 @@ export default function UsersPage() {
           <button
             className="pagination-btn"
             disabled={currentPage === totalPages || totalPages === 0}
-            onClick={() => setCurrentPage((p) => p + 1)}
+            onClick={() => updateQuery({ page: currentPage + 1 })}
+
           >
             Next
           </button>

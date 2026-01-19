@@ -70,28 +70,33 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="field-group">
-          <label className="field-label" htmlFor="email">
-            Email
-          </label>
-          <input
-            id="email"
-            className="text-input"
-            type="email"
-            placeholder="you@company.com"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              setError("");
-            }}
-          />
-        </div>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          handleLogin();
+        }}>
+          <div className="field-group">
+            <label className="field-label" htmlFor="email">
+              Email
+            </label>
+            <input
+              id="email"
+              className="text-input"
+              type="email"
+              placeholder="you@company.com"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setError("");
+              }}
+            />
+          </div>
 
-        {error && <p className="error-text">{error}</p>}
+          {error && <p className="error-text">{error}</p>}
 
-        <button className="primary-btn" onClick={handleLogin}>
-          Sign in
-        </button>
+          <button className="primary-btn" onClick={handleLogin}>
+            Sign in
+          </button>
+        </form>
 
         <p className="login-demo">
           <strong>Quick demo</strong>
