@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useUsers } from "@/context/UserContext";
@@ -82,6 +82,14 @@ export default function UsersPage() {
     startIndex + PAGE_SIZE
   );
 
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
+    name: true,
+    email: true,
+    role: true,
+    status: true,
+  });
+
+
   const columns: Column<User>[] = [
     {
       header: "Name",
@@ -148,6 +156,11 @@ export default function UsersPage() {
     },
   ];
 
+  const filteredColumns = columns.filter(
+  (col) => visibleColumns[col.accessor as string]
+);
+
+
 
   return (
     <section>
@@ -157,6 +170,34 @@ export default function UsersPage() {
       </p>
 
       <div className="card-surface">
+
+
+        {/* COLUMN VISIBILITY TOGGLE */}
+        <div style={{ marginBottom: 15 }}>
+          <strong style={{ fontSize: 13 }}>Show / Hide Columns</strong>
+
+          <div style={{ display: "flex", gap: 15, marginTop: 10 }}>
+            {columns.map((col) => (
+              <label
+                key={String(col.accessor)}
+                style={{ fontSize: 12, cursor: "pointer" }}
+              >
+                <input
+                  type="checkbox"
+                  checked={visibleColumns[col.accessor as string]}
+                  onChange={() =>
+                    setVisibleColumns((prev) => ({
+                      ...prev,
+                      [col.accessor as string]:
+                        !prev[col.accessor as string],
+                    }))
+                  }
+                />{" "}
+                {col.header}
+              </label>
+            ))}
+          </div>
+        </div>
 
 
         {/* SEARCH & FILTER UI */}
@@ -219,7 +260,7 @@ export default function UsersPage() {
 
         {/* TABLE */}
         <DataTable<User>
-          columns={columns}
+          columns={filteredColumns}
           data={currentUsers}
           emptyMessage="No users found"
         />
