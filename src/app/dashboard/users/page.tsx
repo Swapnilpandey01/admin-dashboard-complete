@@ -105,6 +105,7 @@ export default function UsersPage() {
       render: (user) =>
         role === "admin" ? (
           <select
+            name={`role-${user.id}`}
             className="select-input"
             value={user.role}
             onChange={(e) =>
@@ -184,6 +185,7 @@ export default function UsersPage() {
               >
                 <input
                   type="checkbox"
+                  name="checkbox"
                   checked={visibleColumns[col.accessor as string]}
                   onChange={() =>
                     setVisibleColumns((prev) => ({
@@ -208,6 +210,7 @@ export default function UsersPage() {
             </label>
             <input
               id="search"
+              name="search"
               className="text-input"
               type="text"
               placeholder="Search by name or email"
@@ -225,6 +228,7 @@ export default function UsersPage() {
             </label>
             <select
               id="roleFilter"
+              name="roleFilter"
               className="select-input"
               value={roleFilter}
               onChange={(e) =>
@@ -244,6 +248,7 @@ export default function UsersPage() {
             </label>
             <select
               id="statusFilter"
+              name="statusFilter"
               className="select-input"
               value={statusFilter}
               onChange={(e) =>

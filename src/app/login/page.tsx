@@ -80,6 +80,7 @@ export default function LoginPage() {
             </label>
             <input
               id="email"
+              name="email"
               className="text-input"
               type="email"
               placeholder="you@company.com"
@@ -88,6 +89,7 @@ export default function LoginPage() {
                 setEmail(e.target.value);
                 setError("");
               }}
+              autoComplete="email"
             />
           </div>
 
