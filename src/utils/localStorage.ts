@@ -15,17 +15,39 @@ export const clearRole = () => {
 
 // Column Visibility (Users table)
 
-const COLUMN_STORAGE_KEY = "visibleColumns";
+// utils/localStorage.ts
 
-export const setVisibleColumns = (columns: Record<string, boolean>) => {
-  localStorage.setItem(COLUMN_STORAGE_KEY, JSON.stringify(columns));
+const VISIBLE_COLUMNS_KEY = "visibleColumns";
+
+export const getVisibleColumns = () => {
+  if (typeof window === "undefined") return null;
+  const data = localStorage.getItem(VISIBLE_COLUMNS_KEY);
+  return data ? JSON.parse(data) : null;
 };
 
-export const getVisibleColumns = (): Record<string, boolean> | null => {
-  const stored = localStorage.getItem(COLUMN_STORAGE_KEY);
-  return stored ? JSON.parse(stored) : null;
+export const setVisibleColumns = (columns: Record<string, boolean>) => {
+  localStorage.setItem(VISIBLE_COLUMNS_KEY, JSON.stringify(columns));
 };
 
 export const clearVisibleColumns = () => {
-  localStorage.removeItem(COLUMN_STORAGE_KEY);
+  localStorage.removeItem(VISIBLE_COLUMNS_KEY);
+};
+
+
+
+// USERS DATA (PERSISTENT)
+
+const USERS_STORAGE_KEY = "users";
+
+export const saveUsersToStorage = (users: any[]) => {
+  localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+};
+
+export const getUsersFromStorage = (): any[] | null => {
+  const stored = localStorage.getItem(USERS_STORAGE_KEY);
+  return stored ? JSON.parse(stored) : null;
+};
+
+export const clearUsersFromStorage = () => {
+  localStorage.removeItem(USERS_STORAGE_KEY);
 };

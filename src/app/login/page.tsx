@@ -34,26 +34,11 @@ export default function LoginPage() {
     return;
   }
 
-  // ✅ LOGIN WITH ROLE FROM USER DATA
+  // LOGIN WITH ROLE FROM USER DATA
+  
   login(matchedUser.role);
   router.push("/dashboard");
 };
-
-
-
-  // const handleLogin = () => {
-  //   if (!email) {
-  //     setError("Email is required");
-  //     return;
-  //   }
-
-  //   // MOCK ROLE CHECK
-  //   const role =
-  //     email.endsWith("@admin.com") ? "admin" : "viewer";
-
-  //   login(role);
-  //   router.push("/dashboard");
-  // };
 
   return (
     <div className="login-wrapper">
