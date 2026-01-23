@@ -158,8 +158,10 @@ export default function UsersPage() {
   ];
 
   const filteredColumns = columns.filter(
-  (col) => visibleColumns[col.accessor as string]
-);
+    (col) => visibleColumns[col.accessor as string]
+  );
+  const visibleColumnCount = Object.values(visibleColumns).filter(Boolean).length;
+
 
 
 
@@ -187,13 +189,18 @@ export default function UsersPage() {
                   type="checkbox"
                   name="checkbox"
                   checked={visibleColumns[col.accessor as string]}
-                  onChange={() =>
+                  onChange={() => {
+                    const key = col.accessor as string;
+                    const isCurrentlyVisible = visibleColumns[key];
+                    if (isCurrentlyVisible && visibleColumnCount <= 2) {
+                      return;
+                    }
                     setVisibleColumns((prev) => ({
                       ...prev,
-                      [col.accessor as string]:
-                        !prev[col.accessor as string],
-                    }))
-                  }
+                      [key]: !prev[key],
+                    }));
+                  }}
+
                 />{" "}
                 {col.header}
               </label>
