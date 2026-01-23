@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useUsers } from "@/context/UserContext";
 import DataTable, { Column } from "@/components/DataTable";
+import { getVisibleColumns, setVisibleColumns as saveVisibleColumns } from "@/utils/localStorage";
 
 
 
@@ -16,6 +17,9 @@ interface User {
 }
 
 const PAGE_SIZE = 10;
+const MIN_VISIBLE_COLUMNS = 2;
+
+
 
 export default function UsersPage() {
   const { role, loading } = useAuth();
@@ -82,11 +86,31 @@ export default function UsersPage() {
     startIndex + PAGE_SIZE
   );
 
-  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
-    name: true,
-    email: true,
-    role: true,
-    status: true,
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(() => {
+    if (typeof window === "undefined") {
+      return {
+        name: true,
+        email: true,
+        role: true,
+        status: true,
+      };
+    }
+
+    const stored = getVisibleColumns();
+
+    if (stored) {
+      const count = Object.values(stored).filter(Boolean).length;
+      if (count >= MIN_VISIBLE_COLUMNS) {
+        return stored;
+      }
+    }
+
+    return {
+      name: true,
+      email: true,
+      role: true,
+      status: true,
+    };
   });
 
 
@@ -189,16 +213,23 @@ export default function UsersPage() {
                   type="checkbox"
                   name="checkbox"
                   checked={visibleColumns[col.accessor as string]}
+                  disabled={
+                    visibleColumns[col.accessor as string] && visibleColumnCount <= 2
+                  }
                   onChange={() => {
                     const key = col.accessor as string;
                     const isCurrentlyVisible = visibleColumns[key];
                     if (isCurrentlyVisible && visibleColumnCount <= 2) {
                       return;
                     }
-                    setVisibleColumns((prev) => ({
-                      ...prev,
-                      [key]: !prev[key],
-                    }));
+                    const updated = {
+                      ...visibleColumns,
+                      [key]: !visibleColumns[key],
+                    };
+
+                    setVisibleColumns(updated);
+                    saveVisibleColumns(updated);
+
                   }}
 
                 />{" "}
