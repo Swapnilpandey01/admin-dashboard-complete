@@ -23,8 +23,16 @@ const MIN_VISIBLE_COLUMNS = 2;
 
 export default function UsersPage() {
   const { role, loading } = useAuth();
-  const { users, saveUser } = useUsers();
+  const { users, saveUser, addUser } = useUsers();
   const router = useRouter();
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [newUser, setNewUser] = useState({
+    name: "",
+    email: "",
+    role: "viewer",
+    status: "active",
+  });
+
 
   // SEARCH & FILTER STATE FROM URL
   const searchParams = useSearchParams();
@@ -77,6 +85,33 @@ export default function UsersPage() {
     statusFilter === "all"
       ? roleFilteredUsers
       : roleFilteredUsers.filter((u: { status: string; }) => u.status === statusFilter);
+
+  const handleAddUser = () => {
+    // Basic validation
+    if (!newUser.name || !newUser.email) {
+      alert("Name and Email are required");
+      return;
+    }
+
+    const userToAdd = {
+      id: Date.now(), // simple unique ID
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
+      status: newUser.status,
+    };
+
+    addUser(userToAdd);     // 🔥 save to context + localStorage
+    setShowAddUser(false); // close form
+
+    // Reset form
+    setNewUser({
+      name: "",
+      email: "",
+      role: "viewer",
+      status: "active",
+    });
+  };
 
   // PAGINATION (AFTER FILTERING)
   const totalPages = Math.ceil(filteredUsers.length / PAGE_SIZE);
@@ -299,6 +334,107 @@ export default function UsersPage() {
               <option value="inactive">Inactive</option>
             </select>
           </div>
+
+          {/* ADMIN ACTIONS */}
+          {role === "admin" && (
+            <div style={{ alignSelf: "flex-end" }}>
+              <label className="field-label" style={{ visibility: "hidden" }}>
+                Action
+              </label>
+              <button
+                className="primary-btn"
+                style={{ width: "auto", padding: "8px 16px" }}
+                onClick={() => setShowAddUser(true)}
+              >
+                + Add User
+              </button>
+            </div>
+          )}
+          {showAddUser && role === "admin" && (
+            <div
+              className="modal-overlay"
+              onClick={() => setShowAddUser(false)} // click outside closes
+            >
+              <div
+                className="modal-card"
+                onClick={(e) => e.stopPropagation()} // prevent close on inside click
+              >
+                {/* HEADER */}
+                <div className="modal-header">
+                  <h3>Add New User</h3>
+                  <button
+                    className="modal-close"
+                    onClick={() => setShowAddUser(false)}
+                    aria-label="Close"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* FORM */}
+                <div className="filters-row">
+                  <input
+                    className="text-input"
+                    placeholder="Name"
+                    value={newUser.name}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, name: e.target.value })
+                    }
+                  />
+
+                  <input
+                    className="text-input"
+                    placeholder="Email"
+                    value={newUser.email}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, email: e.target.value })
+                    }
+                  />
+
+                  <select
+                    className="select-input"
+                    value={newUser.role}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, role: e.target.value })
+                    }
+                  >
+                    <option value="admin">Admin</option>
+                    <option value="viewer">Viewer</option>
+                  </select>
+
+                  <select
+                    className="select-input"
+                    value={newUser.status}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, status: e.target.value })
+                    }
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+
+                {/* ACTIONS */}
+                <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+                  <button
+                    type="button"              // 🔑 VERY IMPORTANT
+                    className="primary-btn"
+                    onClick={handleAddUser}
+                  >
+                    Create User
+                  </button>
+
+                  <button
+                    type="button"
+                    className="pagination-btn"
+                    onClick={() => setShowAddUser(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* TABLE */}

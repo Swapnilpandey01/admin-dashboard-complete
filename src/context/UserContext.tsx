@@ -12,17 +12,18 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   //INITIAL LOAD: localStorage → fallback to mock API
   
   useEffect(() => {
-    const storedUsers = getUsersFromStorage();
+  const storedUsers = getUsersFromStorage();
 
-    if (storedUsers && storedUsers.length > 0) {
-      setUsers(storedUsers);
-    } else {
-      fetchUsers().then((data) => {
-        setUsers(data);
-        saveUsersToStorage(data); // 🔑 save initial data
-      });
-    }
-  }, []);
+  if (storedUsers && storedUsers.length > 0) {
+    setUsers(storedUsers);
+  } else {
+    fetchUsers().then((data) => {
+      setUsers(data);
+      saveUsersToStorage(data);
+    });
+  }
+}, []);
+
 
   // ✅ SAVE USER (ADMIN EDIT)
   const saveUser = async (updatedUser: User) => {
@@ -38,8 +39,17 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     });
   };
 
+  const addUser = (newUser: User) => {
+  setUsers(prev => {
+    const updatedUsers = [...prev, newUser];
+    saveUsersToStorage(updatedUsers);
+    return updatedUsers;
+  });
+};
+
+
   return (
-    <UserContext.Provider value={{ users, saveUser }}>
+    <UserContext.Provider value={{ users, saveUser, addUser }}>
       {children}
     </UserContext.Provider>
   );
