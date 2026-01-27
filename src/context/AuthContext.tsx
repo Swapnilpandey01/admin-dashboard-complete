@@ -2,6 +2,8 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
 import { setRole, getRole, clearRole } from "@/utils/localStorage";
+import { clearVisibleColumns } from "@/utils/localStorage";
+
 
 type Role = "admin" | "viewer" | null;
 
@@ -26,6 +28,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = () => {
     clearRole();
+    clearVisibleColumns();
     setRoleState(null);
   };
 

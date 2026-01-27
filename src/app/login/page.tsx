@@ -3,27 +3,42 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useUsers } from "@/context/UserContext";
 
 export default function LoginPage() {
   const { login } = useAuth();
   const router = useRouter();
-
+  const { users } = useUsers();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
 
   const handleLogin = () => {
-    if (!email) {
-      setError("Email is required");
-      return;
-    }
+  setError("");
 
-    // MOCK ROLE CHECK
-    const role =
-      email.endsWith("@admin.com") ? "admin" : "viewer";
+  if (!email.trim()) {
+    setError("Email is required");
+    return;
+  }
 
-    login(role);
-    router.push("/dashboard");
-  };
+  const matchedUser = users.find(
+    (u: { email: string }) => u.email.toLowerCase() === email.toLowerCase()
+  );
+
+  if (!matchedUser) {
+    setError("User not found");
+    return;
+  }
+
+  if (matchedUser.status !== "active") {
+    setError("User is inactive");
+    return;
+  }
+
+  // LOGIN WITH ROLE FROM USER DATA
+  
+  login(matchedUser.role);
+  router.push("/dashboard");
+};
 
   return (
     <div className="login-wrapper">
@@ -99,14 +114,6 @@ export default function LoginPage() {
             Sign in
           </button>
         </form>
-
-        <p className="login-demo">
-          <strong>Quick demo</strong>
-          <br />
-          <span>admin@admin.com</span> → Admin
-          <br />
-          <span>user@gmail.com</span> → Viewer
-        </p>
       </div>
     </div>
   );

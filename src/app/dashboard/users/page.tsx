@@ -4,8 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useUsers } from "@/context/UserContext";
 import DataTable, { Column } from "@/components/DataTable";
-
-
+import { getVisibleColumns, setVisibleColumns as saveVisibleColumns } from "@/utils/localStorage";
 
 interface User {
   id: string | number;
@@ -14,13 +13,24 @@ interface User {
   role: string;
   status: string;
 }
-
 const PAGE_SIZE = 10;
+const MIN_VISIBLE_COLUMNS = 2;
 
 export default function UsersPage() {
   const { role, loading } = useAuth();
-  const { users, saveUser } = useUsers();
+  const { users, saveUser, addUser, deleteUser } = useUsers();
   const router = useRouter();
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [newUser, setNewUser] = useState({
+    name: "",
+    email: "",
+    role: "viewer",
+    status: "active",
+  });
+
+  const [showDeleteUser, setShowDeleteUser] = useState(false);
+  const [deleteSearch, setDeleteSearch] = useState("");
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
   // SEARCH & FILTER STATE FROM URL
   const searchParams = useSearchParams();
@@ -32,7 +42,6 @@ export default function UsersPage() {
   // FUNCTION TO UPDATE QUERY PARAMS IN URL
   const updateQuery = (updates: Record<string, string | number>) => {
     const params = new URLSearchParams(searchParams.toString());
-
     Object.entries(updates).forEach(([key, value]) => {
       if (!value || value === "all") {
         params.delete(key);
@@ -43,8 +52,6 @@ export default function UsersPage() {
 
     router.replace(`?${params.toString()}`);
   };
-
-
 
   // Protect route
   useEffect(() => {
@@ -74,6 +81,33 @@ export default function UsersPage() {
       ? roleFilteredUsers
       : roleFilteredUsers.filter((u: { status: string; }) => u.status === statusFilter);
 
+  const handleAddUser = () => {
+  // Basic validation
+    if (!newUser.name || !newUser.email) {
+      alert("Name and Email are required");
+      return;
+    }
+
+    const userToAdd = {
+      id: Date.now(), // simple unique ID
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
+      status: newUser.status,
+    };
+
+    addUser(userToAdd);     // 🔥 save to context + localStorage
+    setShowAddUser(false); // close form
+
+    // Reset form
+    setNewUser({
+      name: "",
+      email: "",
+      role: "viewer",
+      status: "active",
+    });
+  };
+
   // PAGINATION (AFTER FILTERING)
   const totalPages = Math.ceil(filteredUsers.length / PAGE_SIZE);
   const startIndex = (currentPage - 1) * PAGE_SIZE;
@@ -82,11 +116,31 @@ export default function UsersPage() {
     startIndex + PAGE_SIZE
   );
 
-  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
-    name: true,
-    email: true,
-    role: true,
-    status: true,
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(() => {
+    if (typeof window === "undefined") {
+      return {
+        name: true,
+        email: true,
+        role: true,
+        status: true,
+      };
+    }
+
+    const stored = getVisibleColumns();
+
+    if (stored) {
+      const count = Object.values(stored).filter(Boolean).length;
+      if (count >= MIN_VISIBLE_COLUMNS) {
+        return stored;
+      }
+    }
+
+    return {
+      name: true,
+      email: true,
+      role: true,
+      status: true,
+    };
   });
 
 
@@ -158,8 +212,15 @@ export default function UsersPage() {
   ];
 
   const filteredColumns = columns.filter(
-  (col) => visibleColumns[col.accessor as string]
-);
+    (col) => visibleColumns[col.accessor as string]
+  );
+  const visibleColumnCount = Object.values(visibleColumns).filter(Boolean).length;
+
+  const deleteFilteredUsers = users.filter(
+    (u: { name: string; email: string; }) =>
+      u.name.toLowerCase().includes(deleteSearch.toLowerCase()) ||
+      u.email.toLowerCase().includes(deleteSearch.toLowerCase())
+  );
 
 
 
@@ -187,20 +248,31 @@ export default function UsersPage() {
                   type="checkbox"
                   name="checkbox"
                   checked={visibleColumns[col.accessor as string]}
-                  onChange={() =>
-                    setVisibleColumns((prev) => ({
-                      ...prev,
-                      [col.accessor as string]:
-                        !prev[col.accessor as string],
-                    }))
+                  disabled={
+                    visibleColumns[col.accessor as string] && visibleColumnCount <= 2
                   }
+                  onChange={() => {
+                    const key = col.accessor as string;
+                    const isCurrentlyVisible = visibleColumns[key];
+                    if (isCurrentlyVisible && visibleColumnCount <= 2) {
+                      return;
+                    }
+                    const updated = {
+                      ...visibleColumns,
+                      [key]: !visibleColumns[key],
+                    };
+
+                    setVisibleColumns(updated);
+                    saveVisibleColumns(updated);
+
+                  }}
+
                 />{" "}
                 {col.header}
               </label>
             ))}
           </div>
         </div>
-
 
         {/* SEARCH & FILTER UI */}
         <div className="filters-row">
@@ -218,7 +290,6 @@ export default function UsersPage() {
               onChange={(e) =>
                 updateQuery({ search: e.target.value, page: 1 })
               }
-
             />
           </div>
 
@@ -234,7 +305,6 @@ export default function UsersPage() {
               onChange={(e) =>
                 updateQuery({ role: e.target.value, page: 1 })
               }
-
             >
               <option value="all">All roles</option>
               <option value="admin">Admin</option>
@@ -254,13 +324,223 @@ export default function UsersPage() {
               onChange={(e) =>
                 updateQuery({ status: e.target.value, page: 1 })
               }
-
             >
               <option value="all">All status</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
           </div>
+
+          {/* ADMIN ACTIONS */}
+          {role === "admin" && (
+            <div style={{ alignSelf: "flex-end" }}>
+              <label className="field-label" style={{ visibility: "hidden" }}>
+                Action
+              </label>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button
+                  className="primary-btn"
+                  style={{ width: "auto", padding: "8px 16px", boxShadow: "none" }}
+                  onClick={() => setShowAddUser(true)}
+                >
+                  + Add User
+                </button>
+                <button
+                  className="primary-btn"
+                  onClick={() => {
+                    setShowDeleteUser(true);
+                    setDeleteSearch("");
+                    setUserToDelete(null);
+                  }}
+                  style={{
+                    width: "auto",
+                    padding: "8px 16px",
+                    background: "linear-gradient(135deg, #dc2626, #ef4444)",
+                    boxShadow: "none",
+                  }}
+                >
+                  Delete User
+                </button>
+              </div>
+            </div>
+          )}
+          {showAddUser && role === "admin" && (
+            <div
+              className="modal-overlay"
+              onClick={() => setShowAddUser(false)} // click outside closes
+            >
+              <div
+                className="modal-card"
+                onClick={(e)=> e.stopPropagation()} // prevent close when click inside 
+              >
+                {/* HEADER */}
+                <div className="modal-header">
+                  <h3>Add New User</h3>
+                  <button
+                    className="modal-close"
+                    onClick={() => setShowAddUser(false)}
+                    aria-label="Close"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* FORM */}
+                <div className="filters-row">
+                  <input
+                    className="text-input"
+                    placeholder="Name"
+                    value={newUser.name}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, name: e.target.value })
+                    }
+                  />
+
+                  <input
+                    className="text-input"
+                    placeholder="Email"
+                    value={newUser.email}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, email: e.target.value })
+                    }
+                  />
+
+                  <select
+                    className="select-input"
+                    value={newUser.role}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, role: e.target.value })
+                    }
+                  >
+                    <option value="admin">Admin</option>
+                    <option value="viewer">Viewer</option>
+                  </select>
+
+                  <select
+                    className="select-input"
+                    value={newUser.status}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, status: e.target.value })
+                    }
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+
+                {/* ACTIONS */}
+                <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+                  <button
+                    type="button"              // 🔑 VERY IMPORTANT
+                    className="primary-btn"
+                    onClick={handleAddUser}
+                  >
+                    Create User
+                  </button>
+
+                  <button
+                    type="button"
+                    className="pagination-btn"
+                    onClick={() => setShowAddUser(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showDeleteUser && role === "admin" && (
+
+            <div className="modal-overlay"
+              onClick={() => setShowDeleteUser(false)} // click outside closes
+            >
+              <div className="modal-card"
+                onClick={(e) => e.stopPropagation()} // prevent close on inside click
+              >
+                {/* HEADER */}
+                <div className="modal-header">
+                  <h3>Delete User</h3>
+                  <button
+                    className="modal-close"
+                    onClick={() => setShowDeleteUser(false)}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* SEARCH */}
+                <input
+                  className="text-input"
+                  placeholder="Search by name or email"
+                  value={deleteSearch}
+                  onChange={(e) => setDeleteSearch(e.target.value)}
+                  style={{ marginBottom: 12 }}
+                />
+
+                {/* USER LIST */}
+                <div style={{ maxHeight: 220, overflowY: "auto" }}>
+                  {deleteFilteredUsers.map((user: User) => (
+                    <div
+                      key={user.id}
+                      onClick={() => setUserToDelete(user)}
+                      style={{
+                        padding: "8px 10px",
+                        borderRadius: 10,
+                        cursor: "pointer",
+                        marginBottom: 6,
+                        background:
+                          userToDelete?.id === user.id
+                            ? "rgba(59,130,246,0.12)"
+                            : "transparent",
+                        border: "1px solid rgba(148,163,184,0.35)",
+                      }}
+                    >
+                      <strong>{user.name}</strong>
+                      <div style={{ fontSize: 12, color: "#64748b" }}>
+                        {user.email}
+                      </div>
+                    </div>
+                  ))}
+
+                  {deleteFilteredUsers.length === 0 && (
+                    <p style={{ fontSize: 13, color: "#64748b" }}>
+                      No users found
+                    </p>
+                  )}
+                </div>
+
+                {/* ACTIONS */}
+                <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+                  <button
+                    className="primary-btn"
+                    disabled={!userToDelete}
+                    style={{
+                      background: "#dc2828",
+                      boxShadow: "none",
+                    }}
+                    onClick={() => {
+                      if (!userToDelete) return;
+
+                      deleteUser(userToDelete.id);
+                      setShowDeleteUser(false);
+                      setUserToDelete(null);
+                    }}
+                  >
+                    Confirm Delete
+                  </button>
+
+                  <button
+                    className="pagination-btn"
+                    onClick={() => setShowDeleteUser(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
 
         {/* TABLE */}
