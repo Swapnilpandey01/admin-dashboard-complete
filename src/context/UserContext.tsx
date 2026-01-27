@@ -10,19 +10,19 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [users, setUsers] = useState<User[]>([]);
 
   //INITIAL LOAD: localStorage → fallback to mock API
-  
-  useEffect(() => {
-  const storedUsers = getUsersFromStorage();
 
-  if (storedUsers && storedUsers.length > 0) {
-    setUsers(storedUsers);
-  } else {
-    fetchUsers().then((data) => {
-      setUsers(data);
-      saveUsersToStorage(data);
-    });
-  }
-}, []);
+  useEffect(() => {
+    const storedUsers = getUsersFromStorage();
+
+    if (storedUsers && storedUsers.length > 0) {
+      setUsers(storedUsers);
+    } else {
+      fetchUsers().then((data) => {
+        setUsers(data);
+        saveUsersToStorage(data);
+      });
+    }
+  }, []);
 
 
   // ✅ SAVE USER (ADMIN EDIT)
@@ -40,16 +40,25 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const addUser = (newUser: User) => {
-  setUsers(prev => {
-    const updatedUsers = [...prev, newUser];
-    saveUsersToStorage(updatedUsers);
+    setUsers(prev => {
+      const updatedUsers = [...prev, newUser];
+      saveUsersToStorage(updatedUsers);
+      return updatedUsers;
+    });
+  };
+
+  const deleteUser = (id: string | number) => {
+  setUsers((prev) => {
+    const updatedUsers = prev.filter((u) => u.id !== id);
+    saveUsersToStorage(updatedUsers); // 🔥 persist delete
     return updatedUsers;
   });
 };
 
 
+
   return (
-    <UserContext.Provider value={{ users, saveUser, addUser }}>
+    <UserContext.Provider value={{ users, saveUser, addUser, deleteUser }}>
       {children}
     </UserContext.Provider>
   );
